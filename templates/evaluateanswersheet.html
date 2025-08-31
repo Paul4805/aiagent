@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Evaluate Answer Sheet</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9fafb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    label {
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input[type="file"] {
+      margin-bottom: 10px;
+    }
+    .slider-label {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    .slider-value {
+      margin-left: 10px;
+      font-weight: bold;
+      color: #4f46e5;
+    }
+    .btn {
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    .btn:hover {
+      background-color: #4338ca;
+    }
+    .result {
+      margin-top: 30px;
+      padding: 15px;
+      background: #e5e7eb;
+      border-radius: 8px;
+      color: #222;
+      max-width: 400px;
+      text-align: left;
+    }
+    a {
+      margin-top: 30px;
+      color: #4f46e5;
+      text-decoration: none;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Evaluate Answer Sheet</h1>
+  <form id="evalForm" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="questionFile">Upload Question Paper (.docx):</label>
+      <input type="file" id="questionFile" name="questionFile" accept=".docx" required>
+    </div>
+    <div class="form-group">
+      <label for="answerFile">Upload Answer Sheet (.docx):</label>
+      <input type="file" id="answerFile" name="answerFile" accept=".docx" required>
+    </div>
+    <div class="form-group">
+      <label class="slider-label" for="strictness">Strictness:</label>
+      <input type="range" id="strictness" name="strictness" min="1" max="10" value="5" oninput="document.getElementById('strictVal').textContent=this.value">
+      <span class="slider-value" id="strictVal">5</span>
+    </div>
+    <button type="submit" class="btn">Evaluate</button>
+  </form>
+  <div id="result" class="result" style="display:none;"></div>
+  <a href="/">⬅ Back</a>
+    <script>
+        document.getElementById('evalForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('result').innerHTML = '';
+
+            try {
+            const response = await fetch('/evaluate', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.result) {
+                // Split lines by newline
+                const lines = data.result.split(/\r?\n/);
+
+                let html = "";
+                lines.forEach(line => {
+                if (/^Q\d+:/i.test(line)) {
+                    html += `<div style="margin-bottom:6px;"><strong>${line}</strong></div>`;
+                } else if (/^Total:/i.test(line)) {
+                    html += `<hr><div style="font-weight:bold; color:#1d4ed8; margin-top:8px;">${line}</div>`;
+                } else if (/^Comments:/i.test(line)) {
+                    html += `<div style="margin-top:8px; color:#444;"><em>${line}</em></div>`;
+                } else {
+                    html += `<div>${line}</div>`;
+                }
+                });
+
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('result').innerHTML = html;
+            } else {
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('result').textContent = 'Evaluation complete.';
+            }
+
+            } catch (err) {
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').textContent = '❌ Error evaluating answer sheet.';
+            }
+        };
+    </script>
+
+</body>
+</html>

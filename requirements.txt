@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+python-docx
+langchain-google-genai
+langchain-core
+jinja2
+pydantic
