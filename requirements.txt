@@ -5,3 +5,4 @@ langchain-google-genai
 langchain-core
 jinja2
 pydantic
+python-multipart
